@@ -133,7 +133,7 @@ namespace RailStationConnection
 						}
 					}
 
-					RailStationConnection.logger.Log("Link [" + count + "] buildings to " + __instance.SharedData.DisplayName);
+					// RailStationConnection.logger.Log("Link [" + count + "] buildings to " + __instance.SharedData.DisplayName);
 				}
 			}
 		}
