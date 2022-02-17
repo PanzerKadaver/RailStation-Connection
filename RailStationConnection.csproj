@@ -5,6 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove=".gitattributes" />
+    <None Remove=".gitignore" />
+    <None Remove="LICENSE" />
+    <None Remove="README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\VoxelTycoon\VoxelTycoon_Data\Managed\0Harmony.dll</HintPath>
     </Reference>
