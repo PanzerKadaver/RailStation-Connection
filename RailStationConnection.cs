@@ -2,18 +2,34 @@
 
 using HarmonyLib;
 
+using VoxelTycoon;
+using VoxelTycoon.Buildings;
+using VoxelTycoon.Cities;
+using VoxelTycoon.Modding;
+using VoxelTycoon.Tracks;
+
 namespace RailStationConnection
 {
-	public class RailStationConnection : VoxelTycoon.Modding.Mod
+	public class RailStationConnection : Mod
 	{
-		public static VoxelTycoon.Logger logger = new VoxelTycoon.Logger<RailStationConnection>();
+		public static Logger logger = new Logger<RailStationConnection>();
 		public static bool RailStationFlag = false;
+		public static bool FreightConnection = true;
+		public static bool PassengerConnection = true;
+
+
 		protected override void Initialize()
 		{
 			Harmony harmony = new Harmony("PZKD.RailStationConnection");
 			harmony.PatchAll();
 
 			logger.Log("Initialized !");
+		}
+
+		protected override void OnGameStarted()
+		{
+			FreightConnection = WorldSettings.Current.GetBool<RailStationConnectionSettings>(RailStationConnectionSettings.FreightConnectionKey);
+			PassengerConnection = WorldSettings.Current.GetBool<RailStationConnectionSettings>(RailStationConnectionSettings.PassengerConnectionKey);
 		}
 	}
 
@@ -85,75 +101,4 @@ namespace RailStationConnection
 		}
 	}
 	**/
-
-	[HarmonyPatch(typeof(VoxelTycoon.Buildings.StorageNetworkBuilding), "InvalidateSiblings")]
-	internal class StorageBuildingManager_FindSiblings_Postfix
-	{
-		private static void Postfix(VoxelTycoon.Buildings.StorageNetworkBuilding __instance, List<VoxelTycoon.Buildings.StorageBuildingSibling> ____siblings)
-		{
-			// RailStationConnection.logger.Log("VoxelTycoon.Buildings.StorageNetworkBuilding.InvalidateSiblings() - Postfix");
-
-			if ((__instance as VoxelTycoon.Tracks.VehicleStation) != null && (__instance as VoxelTycoon.Tracks.VehicleStation).VehicleType == VoxelTycoon.Tracks.VehicleType.Train)
-			{
-				VoxelTycoon.Cities.City c = null;
-				List<VoxelTycoon.Buildings.Building> siblingsList = new List<VoxelTycoon.Buildings.Building>();
-
-				for (int i = 0; i < ____siblings.Count; i++)
-				{
-					VoxelTycoon.Buildings.Building b = ____siblings[i].Building;
-					string cn = (b.City != null) ? b.City.Name : "No City";
-					bool hc = (b.City != null) ? true : false;
-
-					// RailStationConnection.logger.Log("[" + i + "] : " + b.SharedData.DisplayName + "/" + Utils.GetBuildingType(b) + "/" + cn);
-
-					if (hc)
-					{
-						c = b.City;
-						break;
-					}
-				}
-
-				if (c != null)
-				{
-					foreach(VoxelTycoon.Buildings.StorageBuildingSibling sibling in ____siblings)
-						siblingsList.Add(sibling.Building);
-
-					int count = 0;
-
-					foreach(VoxelTycoon.Buildings.Building building in c.GetBuildings().ToList())
-					{
-						if (!siblingsList.Contains(building) && (building as VoxelTycoon.Buildings.StorageNetworkBuilding) != null)
-						{
-							____siblings.Add(new VoxelTycoon.Buildings.StorageBuildingSibling
-							{
-								Building = building as VoxelTycoon.Buildings.StorageNetworkBuilding,
-								Distance = VoxelTycoon.Xyz.Distance(building.Position, __instance.Position)
-							});
-							count++;
-						}
-					}
-
-					// RailStationConnection.logger.Log("Link [" + count + "] buildings to " + __instance.SharedData.DisplayName);
-				}
-			}
-		}
-	}
-
-	public static class Utils
-	{
-		public static string GetBuildingType(VoxelTycoon.Buildings.Building b)
-		{
-			if ((b as VoxelTycoon.Buildings.House) != null)
-				return "House";
-			if ((b as VoxelTycoon.Buildings.Mine) != null)
-				return "Mine";
-			if ((b as VoxelTycoon.Buildings.Plant) != null)
-				return "Plant";
-			if ((b as VoxelTycoon.Buildings.Store) != null)
-				return "Store";
-			if ((b as VoxelTycoon.Buildings.Warehouse) != null)
-				return "Warehouse";
-			return "Unknow";
-		}
-	}
 }
